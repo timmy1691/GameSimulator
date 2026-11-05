@@ -7,7 +7,7 @@ from GameSimulator.elFaroGames import single
 def main():
     parser = argparse.ArgumentParser(description="El Farol with adaptive mixed or single strategies")
     parser.add_argument("--strategy", choices=("mixed", "single", "single-impulse"), default="mixed")
-    parser.add_argument("--impulse-max", type=float, default=5.0,
+    parser.add_argument("--impulse-max", type=float, default=1.0,
                         help="Single-impulse mode: maximum forecast deduction, in attendees (default 5)")
     impulse_options = parser.add_mutually_exclusive_group()
     impulse_options.add_argument("--impulse-max-per-player",

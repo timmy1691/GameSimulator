@@ -1,5 +1,66 @@
 # El Farol strategy simulator
 
+## Minority answer game
+
+Run the separate minority model and open `minority_game.html`:
+
+```sh
+python minority_game.py --players 50 --rounds 200 --answer-pool 20 --answers-per-round 6 --initial-knowledge 3 --absence-probability 0.2 --learning-probability 0.3
+```
+
+The report uses the same white Plotly layout, stacked panels, and in-chart player
+dropdown as El Farol. Select a player to filter cumulative score, knowledge bank
+size (hover for the actual answers), and adjusted answer probabilities for every
+question. Scores start at round 0. A second dropdown selects a question for a
+table of the full knowledge bank plus all offered answers, learned reward
+estimates, and answer probabilities. You can also click a probability cell to
+inspect that question. The table scrolls when the knowledge bank is large.
+The probability heatmap's rows are offered option positions, not persistent
+route IDs; hover a cell to see its route and whether the player knew it.
+
+Probabilities are recorded **before** the decision and learning, including on
+absent rounds as an observer-only hypothetical policy. For K available known
+answers and B tied best estimates, a known answer's probability conditional on
+participation is `(1-blank_probability) * (exploration/K + (1-exploration)/B)`
+if best, and `(1-blank_probability) * exploration/K` otherwise. Unknown and
+unoffered answers have probability zero. The detail table also shows overall
+probabilities, multiplied by `(1-absence_probability)`, plus blank and absence
+outcomes. This reports the existing choice rule; it does not change behavior.
+
+Full results and pre-decision snapshots are saved to `minority_game.json`.
+Rerun older simulations to obtain these snapshots. Configure runs through command-line
+arguments (`python minority_game.py --help`); the report is an observer, not a
+live simulation editor. The existing El Farol modes are separate.
+
+Rules and modeling assumptions:
+
+- Each question asks which offered route will be least crowded. Answers are
+  persistent numbered routes sampled from a finite pool; learned routes can
+  reappear. Samples may repeat. Route 1 is always offered and initially known
+  to everyone, guaranteeing at least one available known answer per player.
+- Each player independently skips with `--absence-probability`. Participants
+  choose simultaneously from their known offered routes, or leave a blank with
+  `--blank-probability` (default 0). Absence is externally imposed, not strategic.
+- An answer earns N/n points, where N includes all participants, including
+  blanks, and n counts that answer's selectors. Blanks and absences earn zero.
+  Unchosen answers receive no payoff and are not learning targets. If nobody
+  answers, no winning answer exists and nobody learns one.
+- Players start with reward estimates of 1. They choose the highest estimated
+  reward, breaking ties randomly, with `--exploration` probability of choosing
+  a random available known answer. This is a learning heuristic, not a guarantee
+  of optimal play. `--learning-rate` controls exponential reward updates.
+- After playing, a player independently learns a randomly selected highest
+  paying played answer with `--learning-probability`. They add it to their
+  knowledge and update its reward estimate, even if already known. Their own
+  chosen answer is updated once. Blank participants can learn too.
+- Absent players receive no history, new knowledge, or estimate updates.
+  Participant histories record their own choice, reward, and newly learned
+  answer. The observer report has access to the full population state.
+- `--seed` makes runs reproducible. `--output` and `--json-output` change output
+  paths. The default run has 50 players and 200 rounds.
+
+Test this model with `python -m unittest test_minority -v`.
+
 ## Different impulse limits for different players
 
 Mix players with no impulse and players with different impulse strengths:
